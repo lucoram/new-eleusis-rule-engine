@@ -6,8 +6,12 @@ class RuleEngine
     public delegate void PlayedCardValidator(List<CardData> dealtCardsCopy, CardData playedCard, ref bool isCardValid);
     // ********************* END DO NOT MODIFY
 
+    private static readonly int[] NaturalCardOrder = { 0, 14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
+    private static readonly int[] AtoutCardOrder = { 0, 11, 0, 0, 0, 0, 0, 0, 0, 14, 10, 20, 3, 4 };
+    private static readonly int[] SansAtoutCardOrder = { 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 10, 2, 3, 4 };
+
     // MAKE SURE TO UPDATE THE ARRAY CAPACITY
-    public static PlayedCardValidator[] AllRules = new PlayedCardValidator[5];
+    public static PlayedCardValidator[] AllRules = new PlayedCardValidator[8];
 
     static RuleEngine()
     {
@@ -17,6 +21,9 @@ class RuleEngine
         AllRules[3] = MustBeInDecreasingOrder;
         AllRules[4] = MustBeInIncreasingOrder;
         // ADD NEW RULES FROM HERE
+        AllRules[5] = MustBeInAtoutDecreasingOrder;
+        AllRules[6] = MustBeInSansAtoutDecreasingOrder;
+        AllRules[7] = MustBeSameColor;
 
         // MAKE SURE TO UPDATE INCOMPATIBILITIES
         incompatibilityDict.Add(0, new HashSet<int>(new int[] { }));
@@ -24,6 +31,10 @@ class RuleEngine
         incompatibilityDict.Add(2, new HashSet<int>(new int[] { }));
         incompatibilityDict.Add(3, new HashSet<int>(new int[] { 4 }));
         incompatibilityDict.Add(4, new HashSet<int>(new int[] { 3 }));
+        
+        incompatibilityDict.Add(5, new HashSet<int>(new int[] { 0, 1, 3, 4 }));
+        incompatibilityDict.Add(6, new HashSet<int>(new int[] { 0, 1, 3, 4, 5 }));
+        incompatibilityDict.Add(7, new HashSet<int>(new int[] { 2 }));
     }
 
     // ********************* DO NOT MODIFY
@@ -147,6 +158,30 @@ class RuleEngine
         }
 
         isCardValid = isCardValid && (currentCardValue > lastCardValue);
+    }
+
+    private static void MustBeInAtoutDecreasingOrder(List<CardData> dealtCardsCopy, CardData playedCard, ref bool isCardValid)
+    {
+        CardData lastCardOnTable = dealtCardsCopy[dealtCardsCopy.Count - 1];
+        int lastCardValue = AtoutCardOrder[lastCardOnTable.cardValue];
+        int currentCardValue = AtoutCardOrder[playedCard.cardValue];
+
+        isCardValid = isCardValid && (currentCardValue <= lastCardValue);
+    }
+
+    private static void MustBeInSansAtoutDecreasingOrder(List<CardData> dealtCardsCopy, CardData playedCard, ref bool isCardValid)
+    {
+        CardData lastCardOnTable = dealtCardsCopy[dealtCardsCopy.Count - 1];
+        int lastCardValue = SansAtoutCardOrder[lastCardOnTable.cardValue];
+        int currentCardValue = SansAtoutCardOrder[playedCard.cardValue];
+
+        isCardValid = isCardValid && (currentCardValue <= lastCardValue);
+    }
+
+    private static void MustBeSameColor(List<CardData> dealtCardsCopy, CardData playedCard, ref bool isCardValid)
+    {
+        CardData lastCardOnTable = dealtCardsCopy[dealtCardsCopy.Count - 1];
+        isCardValid = isCardValid && (lastCardOnTable.cardSuit == playedCard.cardSuit);
     }
 
     // ADD NEW RULES DEFINITIONS ABOVE THIS LINE
